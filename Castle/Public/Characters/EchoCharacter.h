@@ -66,7 +66,7 @@ protected:
 	*/
 
 	virtual void AttackEnd() override;
-	virtual bool CanAttack() override;
+	virtual bool CanAttack() override;	
 
 
 	bool CanDisarm();

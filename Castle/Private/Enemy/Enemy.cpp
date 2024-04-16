@@ -224,6 +224,7 @@ AActor* AEnemy::ChosePatrolTarget()
 void AEnemy::Attack()
 {
 	Super::Attack();
+	EnemyState = EEnemyState::EES_Engaged;
 	PlayAttackMontage();
 }
 
@@ -232,6 +233,7 @@ bool AEnemy::CanAttack()
 {
 	bool bCanAttack = IsinsideAttackRadius() &&
 		!IsAttacking() &&
+		!IsEngaged() &&
 		!IsDead();
 	return bCanAttack;
 }
@@ -254,6 +256,12 @@ int32 AEnemy::PlayDeathMontage()
 		DeathPose = Pose;
 	}
 	return Selection;
+}
+
+void AEnemy::AttackEnd()
+{
+	EnemyState = EEnemyState::EES_NoState;
+	CheckCombatTarget();
 }
 
 void AEnemy::PawnSeen(APawn* SeenPawn)
@@ -296,7 +304,7 @@ void AEnemy::CheckPatrolTarget()
 	{
 		PatrolTarget = ChosePatrolTarget();
 
-		const float WaitTimer = FMath::RandRange(WaitMin, WaitMax);
+		const float WaitTimer = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
 		GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::PatrolTimerFinished, WaitTimer);
 	}
 }
@@ -308,7 +316,6 @@ void AEnemy::CheckCombatTarget()
 		ClearAttackTimer();
 		LoseInterest();
 		if (!IsEngaged()) StartPatrolling();
-
 	}
 	else if (IsOutsideAttackRadius() && !IsChasing())
 	{
