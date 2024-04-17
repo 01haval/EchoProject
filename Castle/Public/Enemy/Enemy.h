@@ -37,11 +37,11 @@ protected:
 
 	/** <ABaseCharacter> */
 	virtual void Die() override;
-	virtual void Attack() override;
+	virtual void Attack() override;	
 	virtual bool CanAttack() override;
+	virtual void AttackEnd() override;
 	virtual void HandleDamage(float DamageAmount) override;
 	virtual int32 PlayDeathMontage() override;
-	virtual void AttackEnd() override;
 	/** </ABaseCharacter> */
 
 	UPROPERTY(BlueprintReadOnly)
@@ -52,6 +52,7 @@ protected:
 
 private:
 	/** AI Behavior */
+	void InitializeEnemy();
 	void CheckPatrolTarget();
 	void CheckCombatTarget();
 	void PatrolTimerFinished();
@@ -65,22 +66,25 @@ private:
 	bool IsOutsideAttackRadius();
 	bool IsinsideAttackRadius();
 	bool IsChasing();
-	bool IsDead();
-	bool IsEngaged();
 	bool IsAttacking();
+	bool IsDead();
 	void clearPatrolTimer();
-	bool InTargetRange(AActor* Target, double Radius);
-	void MoveToTarget(AActor* Target);
-	AActor* ChosePatrolTarget(); 
-
-	UFUNCTION()
-	void PawnSeen(APawn* SeenPawn);
-
+	bool IsEngaged();
 	/*
 	* Combat
 	*/
 	void StartAttackTimer();
 	void ClearAttackTimer();
+
+	bool InTargetRange(AActor* Target, double Radius);
+	void MoveToTarget(AActor* Target);
+	AActor* ChosePatrolTarget(); 
+	void SpawnDefaultWeapon();
+
+	UFUNCTION()
+	void PawnSeen(APawn* SeenPawn);
+
+
 
 
 	/*

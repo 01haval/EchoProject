@@ -18,8 +18,7 @@
 #include "items/item.h"
 #include "items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
-//for box component collision
-#include "Components/BoxComponent.h"
+
 
 
 
@@ -27,7 +26,7 @@
 AEchoCharacter::AEchoCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -55,7 +54,6 @@ AEchoCharacter::AEchoCharacter()
 	
 }
 
-// Called when the game starts or when spawned
 void AEchoCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -127,23 +125,16 @@ void AEchoCharacter::EKeyPressed()
 	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
 	if (OverlappingWeapon)
 	{
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"),this,this);
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-		OverlappingItem = nullptr;
-		EquippedWeapon = OverlappingWeapon;
+		EquipWeapon(OverlappingWeapon);
 	}
 	else {
 		if (CanDisarm())
 		{
-			PlayEquipMontage(FName("Unequip"));
-			CharacterState = ECharacterState::ECS_Unequipped;
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Disarm();
 		}
 		else if (CanArm())
 		{
-			PlayEquipMontage(FName("Equip"));
-			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Arm();
 		}
 	}
 }
@@ -177,6 +168,20 @@ bool AEchoCharacter::CanArm()
 		EquippedWeapon;
 }
 
+void AEchoCharacter::Arm()
+{
+	PlayEquipMontage(FName("Equip"));
+	CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void AEchoCharacter::Disarm()
+{
+	PlayEquipMontage(FName("Unequip"));
+	CharacterState = ECharacterState::ECS_Unequipped;
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
 void AEchoCharacter::PlayEquipMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -187,7 +192,7 @@ void AEchoCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
-void AEchoCharacter::Disarm()
+void AEchoCharacter::AttachWeaponToBack()
 {
 	if (EquippedWeapon)
 	{
@@ -195,7 +200,7 @@ void AEchoCharacter::Disarm()
 	}
 }
 
-void AEchoCharacter::Arm()
+void AEchoCharacter::AttachWeaponToHand()
 {
 	if (EquippedWeapon)
 	{
@@ -208,19 +213,19 @@ void AEchoCharacter::FinshEquiping()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void AEchoCharacter::EquipWeapon(AWeapon* Weapon)
+{
+	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+	CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	OverlappingItem = nullptr;
+	EquippedWeapon = Weapon;
+}
+
 void AEchoCharacter::AttackEnd()
 {
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
-
-
-// Called every frame
-void AEchoCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 // Called to bind functionality to input
 void AEchoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -30,9 +30,7 @@ public:
 	// Sets default values for this character's properties
 	AEchoCharacter();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -62,32 +60,32 @@ protected:
 	UInputMappingContext* IMC_EchoCharcter;
 
 	/*
-	* Montage Functions
+	* Combat
 	*/
-
+	void EquipWeapon(AWeapon* Weapon);
 	virtual void AttackEnd() override;
 	virtual bool CanAttack() override;	
-
-
 	bool CanDisarm();
 	bool CanArm();
+	void Arm();
+	void Disarm();
 	void PlayEquipMontage(const FName& SectionName);
 
 	UFUNCTION(BlueprintCallable)
-	void Disarm();
+	void AttachWeaponToBack();
 
 	UFUNCTION(BlueprintCallable)
-	void Arm();
+	void AttachWeaponToHand();
 
 	UFUNCTION(BlueprintCallable)
 	void FinshEquiping();
 
 private:
 
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
-	UPROPERTY(BlueprintReadWrite,meta = (AllowPrivateAccess= "true"))
-	EActionState ActionState = EActionState::EAS_Unoccupied;
+
+	/*
+	* Character Components
+	*/
 
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent* Camera;
@@ -102,12 +100,14 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	Aitem* OverlappingItem;
 
-	
-
-
-
 	UPROPERTY(EditDefaultsOnly, Category = Montage)
 	UAnimMontage* EquipMontage;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		EActionState ActionState = EActionState::EAS_Unoccupied;
+
 
 public:
 	FORCEINLINE void SetOverlappingItem(Aitem* Item) { OverlappingItem = Item; }
