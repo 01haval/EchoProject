@@ -9,6 +9,7 @@
 class USphereComponent;
 
 class UNiagaraComponent;
+class UNiagaraSystem;
 
 enum class EItemState
 {
@@ -34,6 +35,8 @@ public:
 	UFUNCTION()
 	virtual void onSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	virtual void SpawnPickupSystem();
+	virtual void SpawnPickupSound();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -63,7 +66,7 @@ protected:
 		USphereComponent* SphereComponent;
 
 	UPROPERTY(EditAnywhere)
-	UNiagaraComponent* EmbersEffect;
+	UNiagaraComponent* ItemEffect;
 
 
 
@@ -73,10 +76,11 @@ private:
 	float RunTime =0;
 
 	
+	UPROPERTY(EditAnywhere)
+		 UNiagaraSystem* PickupEffect;
 
-	//episode 59 7:30 
-
-
+	UPROPERTY(EditAnywhere)
+	USoundBase* PickupSound;
 
 
 };

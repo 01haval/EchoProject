@@ -6,6 +6,7 @@
 #include "BaseCharacter.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "EchoCharacter.generated.h"
 
 
@@ -18,11 +19,14 @@ class UInputMappingContext;
 class UGroomComponent;
 
 class Aitem;
+class ASoul;
 
 class UAnimMontage;
 
+class UEchoOverLay;
+
 UCLASS()
-class CASTLE_API AEchoCharacter : public ABaseCharacter
+class CASTLE_API AEchoCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -33,14 +37,18 @@ public:
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+	virtual void Jump() override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
+	virtual void SetOverlappingItem(Aitem* Item) override;
+	virtual void AddSouls(ASoul* Soul) override;
 
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 
 	/**
 	* input functions 
@@ -71,6 +79,7 @@ protected:
 	void Arm();
 	void Disarm();
 	void PlayEquipMontage(const FName& SectionName);
+	virtual void Die() override;
 
 	UFUNCTION(BlueprintCallable)
 	void AttachWeaponToBack();
@@ -81,8 +90,13 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void FinshEquiping();
 
-private:
+	UFUNCTION(BlueprintCallable)
+	void HitReactEnd();
 
+private:
+	bool IsUnoccupied();
+	void InitiallizeEchoOverlay();
+	void SetHUDHealth();
 
 	/*
 	* Character Components
@@ -109,8 +123,11 @@ private:
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		EActionState ActionState = EActionState::EAS_Unoccupied;
 
+	UPROPERTY()
+	UEchoOverLay* EchoOverlay;
+
 
 public:
-	FORCEINLINE void SetOverlappingItem(Aitem* Item) { OverlappingItem = Item; }
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 };

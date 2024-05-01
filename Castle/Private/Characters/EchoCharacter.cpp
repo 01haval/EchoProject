@@ -14,10 +14,16 @@
 #include "GameFramework/CharacterMovementComponent.h"
 //for hair and eyebrows
 #include "GroomComponent.h"
+//Atributes Components
+#include "Components/AttributeComponent.h"
 //for the equip an item 
 #include "items/item.h"
+
 #include "items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
+#include "HUD/EchoHUD.h"
+#include "HUD/EchoOverLay.h"
+
 
 
 
@@ -63,7 +69,6 @@ AEchoCharacter::AEchoCharacter()
 void AEchoCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 
@@ -75,7 +80,10 @@ void AEchoCharacter::BeginPlay()
 
 	Tags.Add(FName("EngageableTarget"));
 	
+	InitiallizeEchoOverlay();
+
 }
+
 
 void AEchoCharacter::MoveForward(float Value)
 {
@@ -150,8 +158,8 @@ void AEchoCharacter::Attack()
 	Super::Attack();
 	if (CanAttack())
 	{
-		ActionState = EActionState::EAS_Attacking;
 		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
 	}
 }
 
@@ -198,6 +206,13 @@ void AEchoCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
+void AEchoCharacter::Die()
+{
+	Super::Die();
+	ActionState = EActionState::EAS_Dead;
+	DisableMeshCollision();
+}
+
 void AEchoCharacter::AttachWeaponToBack()
 {
 	if (EquippedWeapon)
@@ -218,6 +233,47 @@ void AEchoCharacter::FinshEquiping()
 {
 	ActionState = EActionState::EAS_Unoccupied;
 }
+
+void AEchoCharacter::HitReactEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void AEchoCharacter::InitiallizeEchoOverlay()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		AEchoHUD* EchoHUD = Cast<AEchoHUD>(PlayerController->GetHUD());
+		if (EchoHUD)
+		{
+			EchoOverlay = EchoHUD->GetEchoOverlay();
+			if (EchoOverlay && Attributes)
+			{
+				EchoOverlay->SetHealthBarPrecent(Attributes->GetHealthPercent());
+				EchoOverlay->SetStaminaBarPercent(1.f);
+				EchoOverlay->SetGold(0);
+				EchoOverlay->SetSouls(0);
+			}
+
+		}
+	}
+}
+
+void AEchoCharacter::SetHUDHealth()
+{
+	if (EchoOverlay && Attributes)
+	{
+		EchoOverlay->SetHealthBarPrecent(Attributes->GetHealthPercent());
+	}
+}
+
+bool AEchoCharacter::IsUnoccupied()
+{
+	return ActionState == EActionState::EAS_Unoccupied;
+}
+
+
 
 void AEchoCharacter::EquipWeapon(AWeapon* Weapon)
 {
@@ -245,7 +301,7 @@ void AEchoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(IA_EchoLook, ETriggerEvent::Triggered, this, &AEchoCharacter::EchoLook);
 	}
 
-	PlayerInputComponent->BindAction(FName("Jump"),IE_Pressed,this,&ACharacter::Jump);
+	PlayerInputComponent->BindAction(FName("Jump"),IE_Pressed,this,&AEchoCharacter::Jump);
 	PlayerInputComponent->BindAction(FName("Equip"), IE_Pressed, this, &AEchoCharacter::EKeyPressed);
 	PlayerInputComponent->BindAction(FName("Attack"), IE_Pressed, this, &AEchoCharacter::Attack);
 
@@ -259,10 +315,42 @@ void AEchoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-void AEchoCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+void AEchoCharacter::Jump()
 {
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticales(ImpactPoint);
+	if (IsUnoccupied())
+	{
+		Super::Jump();
+	}
+}
+
+
+
+float AEchoCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	HandleDamage(DamageAmount);
+	SetHUDHealth();
+	return DamageAmount;
+}
+
+
+void AEchoCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
+{
+	Super::GetHit_Implementation(ImpactPoint,Hitter);
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (Attributes && Attributes->GetHealthPercent() > 0.f)
+	{
+		ActionState = EActionState::EAS_HitReaction;
+	}
+}
+
+void AEchoCharacter::SetOverlappingItem(Aitem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void AEchoCharacter::AddSouls(ASoul* Soul)
+{
+	UE_LOG(LogTemp,Warning,TEXT("AEchoCharacter::AddSouls"))
 }
 
 

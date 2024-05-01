@@ -2,8 +2,11 @@
 #include "items/item.h"
 #include "Castle/DebugMacros.h"
 #include "Components/SphereComponent.h"
-#include "Characters/EchoCharacter.h"
+#include "Interfaces/PickupInterface.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 
 
 
@@ -22,8 +25,8 @@ Aitem::Aitem()
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(GetRootComponent());
 
-	EmbersEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
-	EmbersEffect->SetupAttachment(GetRootComponent());
+	ItemEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	ItemEffect->SetupAttachment(GetRootComponent());
 
 
 }
@@ -90,21 +93,40 @@ void Aitem::Tick(float DeltaTime)
 
 void Aitem::onSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AEchoCharacter* EchoCharacter = Cast<AEchoCharacter>(OtherActor);
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 	
-	if (EchoCharacter)
+	if (PickupInterface)
 	{
-		EchoCharacter->SetOverlappingItem(this);
+		PickupInterface->SetOverlappingItem(this);
 	}
 }
 
 void Aitem::onSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	AEchoCharacter* EchoCharacter = Cast<AEchoCharacter>(OtherActor);
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 
-	if (EchoCharacter)
+	if (PickupInterface)
 	{
-		EchoCharacter->SetOverlappingItem(nullptr);
+		PickupInterface->SetOverlappingItem(nullptr);
 	}
+}
+
+void Aitem::SpawnPickupSystem()
+{
+	if (PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			PickupEffect, GetActorLocation()
+		);
+	}
+}
+
+void Aitem::SpawnPickupSound()
+{
+	UGameplayStatics::SpawnSoundAtLocation(
+		this,
+		PickupSound, GetActorLocation()
+	);
 }
 

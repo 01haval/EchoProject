@@ -20,8 +20,6 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = Sounds)
-	USoundBase* TreasurSound;
 
 	UPROPERTY(EditAnywhere, Category = "Treasure Properties")
 	int32 GoldCount;

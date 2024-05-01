@@ -27,7 +27,7 @@ public:
 	/** </AActor> */
 
 	/** <IHitInterface> */
-	virtual void GetHit_Implementation(const FVector & ImpactPoint) override;
+	virtual void GetHit_Implementation(const FVector & ImpactPoint,AActor* Hitter) override;
 	/** </IHitInterface> */
 
 protected:
@@ -41,15 +41,14 @@ protected:
 	virtual bool CanAttack() override;
 	virtual void AttackEnd() override;
 	virtual void HandleDamage(float DamageAmount) override;
-	virtual int32 PlayDeathMontage() override;
 	/** </ABaseCharacter> */
 
-	UPROPERTY(BlueprintReadOnly)
-		TEnumAsByte<EDeathPose> DeathPose;
+
 
 	UPROPERTY(BlueprintReadOnly)
 		EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
+	
 private:
 	/** AI Behavior */
 	void InitializeEnemy();
@@ -100,8 +99,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AWeapon> WeaponClass;
 
-	UPROPERTY()
-		AActor* CombatTarget;
+
 
 	UPROPERTY(EditAnywhere)
 		double CombatRadius = 500.f;
