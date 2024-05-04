@@ -20,6 +20,7 @@ class UGroomComponent;
 
 class Aitem;
 class ASoul;
+class ATreasure;
 
 class UAnimMontage;
 
@@ -33,7 +34,7 @@ class CASTLE_API AEchoCharacter : public ABaseCharacter, public IPickupInterface
 public:
 	// Sets default values for this character's properties
 	AEchoCharacter();
-
+	virtual void Tick(float DeltaTime) override;
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -42,7 +43,7 @@ public:
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 	virtual void SetOverlappingItem(Aitem* Item) override;
 	virtual void AddSouls(ASoul* Soul) override;
-
+	virtual void AddGold(ATreasure* Treasure) override;
 
 
 protected:
@@ -60,6 +61,7 @@ protected:
 	void LookUp(float value);
 	void EKeyPressed();
 	virtual void Attack() override;
+	void Dodge();
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* IA_Movement;
@@ -73,13 +75,17 @@ protected:
 	*/
 	void EquipWeapon(AWeapon* Weapon);
 	virtual void AttackEnd() override;
+	virtual void DodgeEnd() override;
 	virtual bool CanAttack() override;	
 	bool CanDisarm();
 	bool CanArm();
 	void Arm();
 	void Disarm();
 	void PlayEquipMontage(const FName& SectionName);
-	virtual void Die() override;
+	virtual void Die_Implementation() override;
+	bool HasEnoughStamina();
+	bool IsOccupied();
+
 
 	UFUNCTION(BlueprintCallable)
 	void AttachWeaponToBack();

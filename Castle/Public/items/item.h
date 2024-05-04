@@ -62,7 +62,7 @@ protected:
 	EItemState ItemState = EItemState::EIS_Hovering;
 
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		USphereComponent* SphereComponent;
 
 	UPROPERTY(EditAnywhere)

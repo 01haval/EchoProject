@@ -13,9 +13,7 @@ class UPickupInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
+
 class CASTLE_API IPickupInterface
 {
 	GENERATED_BODY()
@@ -24,4 +22,6 @@ class CASTLE_API IPickupInterface
 public:
 	virtual void SetOverlappingItem(class Aitem* Item);
 	virtual void AddSouls(class ASoul* Soul);
+	virtual void AddGold(class ATreasure* Treasure);
+
 };

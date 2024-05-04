@@ -23,6 +23,8 @@
 #include "Animation/AnimMontage.h"
 #include "HUD/EchoHUD.h"
 #include "HUD/EchoOverLay.h"
+#include "items/Soul.h"
+#include "items/Treasure.h"
 
 
 
@@ -32,7 +34,7 @@
 AEchoCharacter::AEchoCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -64,6 +66,16 @@ AEchoCharacter::AEchoCharacter()
 	Eyebrows->AttachmentName = FString("head");
 
 	
+}
+
+
+void AEchoCharacter::Tick(float DeltaTime)
+{
+	if (Attributes && EchoOverlay)
+	{
+		Attributes->RegenStamina(DeltaTime);
+		EchoOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}
 }
 
 void AEchoCharacter::BeginPlay()
@@ -139,6 +151,10 @@ void AEchoCharacter::EKeyPressed()
 	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
 	if (OverlappingWeapon)
 	{
+		if (EquippedWeapon)
+		{
+			EquippedWeapon->Destroy();
+		}
 		EquipWeapon(OverlappingWeapon);
 	}
 	else {
@@ -160,6 +176,18 @@ void AEchoCharacter::Attack()
 	{
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
+	}
+}
+
+void AEchoCharacter::Dodge()
+{
+	if (IsOccupied() || !HasEnoughStamina()) return;
+	PlayDodgeMontage();
+	ActionState = EActionState::EAS_Dodge;
+	if (Attributes && EchoOverlay)
+	{
+		Attributes->UseStamina(Attributes->GetDodgeCost());
+		EchoOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
 	}
 }
 
@@ -206,9 +234,9 @@ void AEchoCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
-void AEchoCharacter::Die()
+void AEchoCharacter::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();
 }
@@ -227,6 +255,15 @@ void AEchoCharacter::AttachWeaponToHand()
 	{
 		EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
 	}
+}
+bool AEchoCharacter::HasEnoughStamina()
+{
+	return Attributes && Attributes->GetStamina() > Attributes->GetDodgeCost();
+}
+
+bool AEchoCharacter::IsOccupied()
+{
+	return ActionState != EActionState::EAS_Unoccupied;
 }
 
 void AEchoCharacter::FinshEquiping()
@@ -288,6 +325,12 @@ void AEchoCharacter::AttackEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void AEchoCharacter::DodgeEnd()
+{
+	Super::DodgeEnd();
+	ActionState = EActionState::EAS_Unoccupied;	
+}
+
 
 // Called to bind functionality to input
 void AEchoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -304,6 +347,9 @@ void AEchoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction(FName("Jump"),IE_Pressed,this,&AEchoCharacter::Jump);
 	PlayerInputComponent->BindAction(FName("Equip"), IE_Pressed, this, &AEchoCharacter::EKeyPressed);
 	PlayerInputComponent->BindAction(FName("Attack"), IE_Pressed, this, &AEchoCharacter::Attack);
+	PlayerInputComponent->BindAction(FName("Dodge"), IE_Pressed, this, &AEchoCharacter::Dodge);
+
+
 
 
 	/*
@@ -350,7 +396,20 @@ void AEchoCharacter::SetOverlappingItem(Aitem* Item)
 
 void AEchoCharacter::AddSouls(ASoul* Soul)
 {
-	UE_LOG(LogTemp,Warning,TEXT("AEchoCharacter::AddSouls"))
+	if (Attributes && EchoOverlay)
+	{
+		Attributes->AddSouls(Soul->GetSouls());
+		EchoOverlay->SetSouls(Attributes->GetSouls());
+	}
+}
+
+void AEchoCharacter::AddGold(ATreasure* Treasure)
+{
+	if (Attributes)
+	{
+		Attributes->AddGold(Treasure->GetGold());
+		EchoOverlay->SetGold(Attributes->GetGold());
+	}
 }
 
 
